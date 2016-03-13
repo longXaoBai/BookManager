@@ -1,19 +1,39 @@
 package GUI;
-import java.util.*;
-import java.io.*;
-import java.nio.file.Paths;
-
-import MODEL.Book;
+import java.util.Scanner;
+import java.sql.*;
 
 public class MainClass {
-	static ArrayList<Book> book = new ArrayList<Book>();
-	static File file = new File("C:\\Users\\龙江\\Desktop\\file.txt");
+	Connection dbConn;
+	int bookCount = 0;
 	
 	public static void main(String[] args) {
-		loadData();
+		new MainClass();
+	}
+	
+	{
+		String driverName="com.microsoft.sqlserver.jdbc.SQLServerDriver";
+		String dbURL="jdbc:sqlserver://localhost:1433;DatabaseName=Book";
+		String userName="sa";
+		String userPwd="jiang1689";
+		try {
+			Class.forName(driverName);
+		} catch (ClassNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		try {
+			dbConn = DriverManager.getConnection(dbURL,userName,userPwd);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
+	MainClass(){
+		foreach();
 		String choose = "0";
+		Scanner in = new Scanner(System.in);
 		while(!choose.equals("6")){
-			Scanner in = new Scanner(System.in);
 			System.out.println("欢迎来到图书管理系统！");
 			System.out.println("***********************");
 			System.out.println("1.增          2.删          3.改          4.查          5.显          6.退");
@@ -30,172 +50,251 @@ public class MainClass {
 			default:System.out.println("请输入正确序号！！");break;
 			}
 		}
-		saveData();
+		try {
+			dbConn.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		in.close();
 		System.out.println("成功退出！");
 	}
 	
-	public static void add(){
-			Scanner in1 = new Scanner(System.in);
-			Scanner in2 = new Scanner(System.in);
-			System.out.println("\n\n**********增加界面**********");
-			System.out.println("请输入要添加图书的书名：");
-			String bookname = in1.nextLine();
-			System.out.println("请输入要添加图书的作者：");
-			String author = in1.nextLine();
-			System.out.println("请输入要添加图书的单价：");
-			float price = in1.nextFloat();
-			int num = 0;
-			while(true){
-				System.out.println("请输入要添加至的位置：");
-				num = in2.nextInt();
-				if((num-1) > book.size() || (num-1) < 0)
-					System.out.println("请输入正确的序号！");
-				else
-					break;
-			}
-			book.add((num-1), new Book(bookname,author,price));
-		System.out.print("\n\n");
+	public void add(){
+		Scanner in = new Scanner(System.in);
+		System.out.println("\n\n**********增加界面**********");
+		System.out.println("请输入要添加图书的书名：");
+		String bookname = in.nextLine();
+		System.out.println("请输入要添加图书的作者：");
+		String author = in.nextLine();
+		System.out.println("请输入要添加图书的单价：");
+		float price = in.nextFloat();
+		try {
+			String sql="insert into BookList (id,bookname,author,price) values (?,?,?,?)";
+			PreparedStatement pstmt=dbConn.prepareStatement(sql);
+			pstmt.setInt(1, bookCount+1);
+			pstmt.setString(2, bookname);
+			pstmt.setString(3, author);
+			pstmt.setFloat(4, price);
+			pstmt.executeUpdate();
+			pstmt.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally{
+			bookCount++;
+			System.out.println("\n\n");
+		}
 	}
 	
-	public static void delete(){
-		if(book.size() <= 0)
+	public void delete(){
+		if(bookCount <= 0)
 			System.out.println("图书已为0本，无法删除！");
 		else{
 			Scanner in = new Scanner(System.in);
 			System.out.println("\n\n**********删除界面**********");
-			int num = 0;
+			int id = 0;
 			while(true){
-				System.out.println("请输入所删图书序号：");
-				num = in.nextInt();
-				if(num-1 > book.size() || num-1 < 0)
+				System.out.println("请输入所改图书序号：");
+				id = in.nextInt();
+				if(id > bookCount || id-1 < 0)
 					System.out.println("请输入正确的序号！");
 				else
 					break;
 			}
-			book.remove(num-1);
+			try {
+				String delSql = "delete BookList where id = ?";
+				PreparedStatement delPstmt = dbConn.prepareStatement(delSql);
+				delPstmt.setInt(1, id);
+				delPstmt.executeUpdate();
+				String idReturnSql = "update BookList set id = id - 1 where id > ?";
+				PreparedStatement idReturnPstmt = dbConn.prepareStatement(idReturnSql);
+				idReturnPstmt.setInt(1, id);
+				idReturnPstmt.executeUpdate();
+				delPstmt.close();
+				idReturnPstmt.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} finally{
+				bookCount--;
+				System.out.println("\n\n");
+			}
 		}
-		System.out.print("\n\n");
 	}
 	
-	public static void charge(){
-		Scanner in1 = new Scanner(System.in);
-		Scanner in2 = new Scanner(System.in);
+	public void charge(){
+		Scanner in = new Scanner(System.in);
 		System.out.println("\n\n**********修改界面**********");
-		int num = 0;
+		int id = 0;
 		while(true){
 			System.out.println("请输入所改图书序号：");
-			num = in1.nextInt();
-			if(num-1 > book.size() || num-1 < 0)
+			id = in.nextInt();
+			in.nextLine();
+			if(id > bookCount || id-1 < 0)
 				System.out.println("请输入正确的序号！");
 			else
 				break;
 		}
 		System.out.println("请输入所改图书名称:");
-		String bookname = in2.nextLine();
+		String bookname = in.nextLine();
 		System.out.println("请输入所改图书作者:");
-		String author = in2.nextLine();
+		String author = in.nextLine();
 		System.out.println("请输入所改图书单价:");
-		float price = in2.nextFloat();
-		book.set(num-1, new Book(bookname,author,price));
-		System.out.print("\n\n");
+		float price = in.nextFloat();
+		try {
+			String sql = "update BookList set bookname = ?, author = ?, price = ? where id = ?";
+			PreparedStatement pstmt = dbConn.prepareStatement(sql);
+			pstmt.setString(1, bookname);
+			pstmt.setString(2, author);
+			pstmt.setFloat(3, price);
+			pstmt.setInt(4, id);
+			pstmt.executeUpdate();
+			pstmt.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally{
+			System.out.println("\n\n");
+		}
 	}
 	
-	public static void search(){
-		Scanner in1 = new Scanner(System.in);
+	public void search(){
+		Scanner in = new Scanner(System.in);
 		System.out.println("\n\n**********查找界面**********");
 		System.out.println("1.按序号查          2.按图书名查          3.按作者查          4.按单价查");
 		String choose = "0";
-		choose = in1.nextLine();
+		choose = in.nextLine();
 		switch(choose){
 		case "1":{
-			int num = 0;
+			int id = 0;
 			while(true){
 				System.out.println("请输入所查图书序号：");
-				num = in1.nextInt();
-				if(num-1 > book.size() || num-1 < 0)
+				id = in.nextInt();
+				in.nextLine();
+				if(id > bookCount || id-1 < 0)
 					System.out.println("请输入正确的序号！");
 				else
 					break;
 			}
-			System.out.println("第" + num + "本书为" +book.get(num-1).bookname + ",作者为" + book.get(num-1).author + ",单价为" + book.get(num-1).price);
+			try {
+				String sql = "select * from BookList where id = ?";
+				PreparedStatement pstmt = dbConn.prepareStatement(sql);
+				pstmt.setInt(1, id);
+				ResultSet rs = pstmt.executeQuery();
+				while(rs.next())
+					System.out.println("第" + id + "本书为" + rs.getString("bookname") + ",作者为" + rs.getString("author") + ",单价为:" + rs.getFloat("price"));
+				pstmt.close();
+				rs.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
 		}break;
 		case "2":{
-			Scanner in2 = new Scanner(System.in);
 			System.out.println("请输入所查图书名称：");
-			String name = in2.nextLine();
-			int i = 0,count = 0,temp = book.size();
-			
-			while(i < temp){
-				Book aBook = book.get(i);
-				if(aBook.bookname.equals(name)){
-					System.out.println(name + "序号为：" + (i+1) + ",作者为" + aBook.author + ",单价为" + aBook.price);
+			String name = in.nextLine();
+			String sql = "select * from BookList where bookname = ?";
+			int count = 0;
+			try {
+				PreparedStatement pstmt = dbConn.prepareStatement(sql);
+				pstmt.setString(1, name);
+				ResultSet rs = pstmt.executeQuery();
+				while(rs.next()){
+					System.out.println(name + "序号为：" + rs.getInt("id") + ",作者为" + rs.getString("author") + ",单价为:" + rs.getFloat("price"));
 					count++;
 				}
-				i++;
+				if(count == 0)
+					System.out.println("没有这本书！");
+				pstmt.close();
+				rs.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			if(count == 0)
-				System.out.println("没有这本书！");
 		}break;
 		case "3":{
-			Scanner in3 = new Scanner(System.in);
-			System.out.println("请输入所查作者名称：");
-			String author = in3.nextLine();
-			int i = 0,count = 0,temp = book.size();
-			while(i < temp){
-				Book aBook = book.get(i);
-				if(aBook.author.equals(author)){
-					System.out.println(author + "作品有：" + aBook.bookname + "，单价为：" + aBook.price + "，序号为：" + (i+1));
+			System.out.println("请输入所查图书作者：");
+			String name = in.nextLine();
+			String sql = "select * from BookList where author = ?";
+			int count = 0;
+			try {
+				PreparedStatement pstmt = dbConn.prepareStatement(sql);
+				pstmt.setString(1, name);
+				ResultSet rs = pstmt.executeQuery();
+				while(rs.next()){
+					System.out.println(name + "序号为：" + rs.getInt("id") + ",书名为" + rs.getString("bookname") + ",单价为:" + rs.getFloat("price"));
 					count++;
 				}
-				i++;
+				if(count == 0)
+					System.out.println("没有这本书！");
+				pstmt.close();
+				rs.close();
+			} catch (SQLException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			if(count == 0)
-				System.out.println("没有这本书！");
 		}break;
 		case "4":{
-			Scanner in4 = new Scanner(System.in);
 			float lowPrice = 0;
 			do{
 				System.out.println("请输入所查图书最低价：");
-				lowPrice = in4.nextFloat();
+				lowPrice = in.nextFloat();
+				in.nextLine();
 				if(lowPrice<0)
 					System.out.println("请输入正确价格！");
 			}while(lowPrice < 0);
 			System.out.println("是否限制图书最高价？y or n");
-			Scanner in5 = new Scanner(System.in);
-			String choose2 = in5.nextLine();
+			String choose2 = in.nextLine();
 			if(choose2.equals("n")){
-				int count = 0,temp = book.size();
-				System.out.println("所查图书有：");
-
-				for(int i = 0;i<temp;i++){
-					Book aBook = book.get(i);
-					if(aBook.price>lowPrice){
-						System.out.println(aBook.bookname + "，作者为：" + aBook.author + "，单价为：" + aBook.price +"，序号为：" + (i+1));
+				try {
+					String sql = "select * from BookList where price > ?";
+					PreparedStatement pstmt = dbConn.prepareStatement(sql);
+					pstmt.setFloat(1, lowPrice);
+					ResultSet rs = pstmt.executeQuery();
+					System.out.println("所查图书有：");
+					int count = 0;
+					while(rs.next()){
+						System.out.println(rs.getString("bookname") + "，作者为：" + rs.getString("author") + "，单价为：" + rs.getFloat("price") +"，序号为：" + rs.getInt("id"));
 						count++;
 					}
+					if(count == 0)
+						System.out.println("没有这本书！");
+					pstmt.close();
+					rs.close();
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
-				if(count == 0)
-					System.out.println("没有这本书！");
 			}
 			else if(choose2.equals("y")){
-				int count = 0,temp = book.size();
 				float highPrice = 0;
 				do{
 					System.out.println("请输入图书最高价：");
-					highPrice = in4.nextFloat();
+					highPrice = in.nextFloat();
+					in.nextLine();
 					if(highPrice <lowPrice)
 						System.out.println("所输最高价低于所输最低价，请重新输入！");
 				}while(highPrice <lowPrice);
-				for(int i = 0;i<temp;i++){
-					Book aBook = book.get(i);
-					if(aBook.price>lowPrice && aBook.price<highPrice){
-						System.out.println(aBook.bookname + "作者为：" + aBook.author + "，单价为：" + aBook.price + "，序号为：" + (i+1));
+				try {
+					String sql = "select * from BookList where price > ? and price < ?";
+					PreparedStatement pstmt = dbConn.prepareStatement(sql);
+					pstmt.setFloat(1, lowPrice);
+					pstmt.setFloat(2, highPrice);
+					ResultSet rs = pstmt.executeQuery();
+					int count = 0;
+					while(rs.next()){
+						System.out.println(rs.getString("bookname") + "，作者为：" + rs.getString("author") + "，单价为：" + rs.getFloat("price") +"，序号为：" + rs.getInt("id"));
 						count++;
 					}
+					if(count == 0)
+						System.out.println("没有这本书！");
+					pstmt.close();
+					rs.close();
+				} catch (SQLException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
 				}
-				if(count == 0)
-					System.out.println("没有这本书！");
 			}
 		}break;
 		default:System.out.println("请输入正确序号！！");break;
@@ -203,73 +302,30 @@ public class MainClass {
 		System.out.print("\n\n");
 	}
 	
-	public static void foreach(){
+	public void foreach(){
 		System.out.print("\n\n");
-		int temp = book.size();
-		for(int i = 0;i < temp;i++){
-			Book aBook = book.get(i);
-			System.out.println("第" + (i+1) + "本书为：" + aBook.bookname + ",作者为" + aBook.author + ",单价为" + aBook.price);
-		}
-			
-		System.out.print("\n\n");
-	}
-	
-	public static void loadData(){
-		File file = new File("C:\\Users\\龙江\\Desktop\\file.txt");
-		Scanner READ = null;
+		String sql = "select * from BookList order by id";
 		try {
-			if(!file.exists())
-				file.createNewFile();
-			READ = new Scanner(file);
-			READ.useDelimiter("[,\\n]");
-			String name,author,aPrice;
-			float price;
-			try{
-				do{
-				name = READ.next();
-				author = READ.next();
-				aPrice = READ.next();
-				price = Float.valueOf(aPrice);
-				book.add(new Book(name,author,price));
-				} while(READ.hasNextLine());
-					
-			} catch(NoSuchElementException e){
-				System.out.println("文件中没有内容！");
+			PreparedStatement pstmt = dbConn.prepareStatement(sql);
+			ResultSet rs = pstmt.executeQuery();
+			System.out.println("当前图书为：");
+			while(rs.next()){
+				System.out.println("第" + rs.getInt("id") + "本书为" + rs.getString("bookname") + ",作者为" + rs.getString("author") + ",单价为:" + rs.getFloat("price"));
+				bookCount++;
 			}
-		} catch (IOException e) {
+			pstmt.close();
+			rs.close();
+		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} finally{
-			if(READ != null) READ.close();
 		}
-	}
-	
-	public static void saveData(){
-		File file = new File("C:\\Users\\龙江\\Desktop\\file.txt");
-		FileWriter WRITER =null;
-		try {
-			if(!file.exists())
-				file.createNewFile();
-			WRITER = new FileWriter(file);
-			int temp = book.size();
-			for(int i = 0;i<temp;i++){
-				Book aBook = book.get(i);
-				WRITER.write(aBook.bookname + "," + aBook.author + "," + aBook.price + "\r\n");
-			}
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}finally{
-			try {
-				if(WRITER != null) WRITER.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		}
+		System.out.print("\n\n");
 	}
 }
+
+
+
+
 
 
 

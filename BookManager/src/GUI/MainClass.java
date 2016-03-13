@@ -1,11 +1,16 @@
 package GUI;
 import java.util.*;
+import java.io.*;
+import java.nio.file.Paths;
 
 import MODEL.Book;
 
 public class MainClass {
 	static ArrayList<Book> book = new ArrayList<Book>();
+	static File file = new File("C:\\Users\\龙江\\Desktop\\file.txt");
+	
 	public static void main(String[] args) {
+		loadData();
 		String choose = "0";
 		while(!choose.equals("6")){
 			Scanner in = new Scanner(System.in);
@@ -25,6 +30,7 @@ public class MainClass {
 			default:System.out.println("请输入正确序号！！");break;
 			}
 		}
+		saveData();
 		System.out.println("成功退出！");
 	}
 	
@@ -207,7 +213,70 @@ public class MainClass {
 			
 		System.out.print("\n\n");
 	}
+	
+	public static void loadData(){
+		File file = new File("C:\\Users\\龙江\\Desktop\\file.txt");
+		Scanner READ = null;
+		try {
+			if(!file.exists())
+				file.createNewFile();
+			READ = new Scanner(file);
+			READ.useDelimiter("[,\\n]");
+			String name,author,aPrice;
+			float price;
+			try{
+				do{
+				name = READ.next();
+				author = READ.next();
+				aPrice = READ.next();
+				price = Float.valueOf(aPrice);
+				book.add(new Book(name,author,price));
+				} while(READ.hasNextLine());
+					
+			} catch(NoSuchElementException e){
+				System.out.println("文件中没有内容！");
+			}
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally{
+			if(READ != null) READ.close();
+		}
+	}
+	
+	public static void saveData(){
+		File file = new File("C:\\Users\\龙江\\Desktop\\file.txt");
+		FileWriter WRITER =null;
+		try {
+			if(!file.exists())
+				file.createNewFile();
+			WRITER = new FileWriter(file);
+			int temp = book.size();
+			for(int i = 0;i<temp;i++){
+				Book aBook = book.get(i);
+				WRITER.write(aBook.bookname + "," + aBook.author + "," + aBook.price + "\r\n");
+			}
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}finally{
+			try {
+				if(WRITER != null) WRITER.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
 }
+
+
+
+
+
+
+
 
 
 

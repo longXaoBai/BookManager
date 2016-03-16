@@ -12,7 +12,6 @@ public class MainClass {
 	}
 	
 	{
-		
 		String driverName="com.microsoft.sqlserver.jdbc.SQLServerDriver";
 		String dbURL="jdbc:sqlserver://localhost:1433;DatabaseName=Book";
 		String userName="sa";
@@ -32,6 +31,7 @@ public class MainClass {
 	}
 	
 	MainClass(){
+		foreach();
 		String choose = "0";
 		
 		while(!choose.equals("6")){
@@ -62,7 +62,6 @@ public class MainClass {
 	}
 	
 	public void add(){
-		//Scanner in = new Scanner(System.in);
 		System.out.println("\n\n**********增加界面**********");
 		System.out.println("请输入要添加图书的书名：");
 		String bookname = in.nextLine();
@@ -93,7 +92,6 @@ public class MainClass {
 		if(bookCount <= 0)
 			System.out.println("图书已为0本，无法删除！");
 		else{
-			//Scanner in = new Scanner(System.in);
 			System.out.println("\n\n**********删除界面**********");
 			int id = 0;
 			while(true){
@@ -127,7 +125,6 @@ public class MainClass {
 	}
 	
 	public void charge(){
-		//Scanner in = new Scanner(System.in);
 		System.out.println("\n\n**********修改界面**********");
 		int id = 0;
 		while(true){
@@ -164,7 +161,6 @@ public class MainClass {
 	}
 	
 	public void search(){
-		//Scanner in = new Scanner(System.in);
 		System.out.println("\n\n**********查找界面**********");
 		System.out.println("1.按序号查          2.按图书名查          3.按作者查          4.按单价查");
 		String choose = "0";

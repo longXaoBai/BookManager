@@ -6,167 +6,185 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import DATABASE.DBConnection;
+import MODEL.Book;
+import MODEL.BookList;
 
 public class Operation {
 	
-	public void add(String id,String bookname,String author,Float price){
+	public boolean add(Book book){
 		try {
 			Connection dbConn = DBConnection.getConnection();
 			String sql="insert into BookList (id,bookname,author,price) values (?,?,?,?)";
 			PreparedStatement pstmt=dbConn.prepareStatement(sql);
-			pstmt.setString(1, id);
-			pstmt.setString(2, bookname);
-			pstmt.setString(3, author);
-			pstmt.setFloat(4, price);
+			pstmt.setString(1, book.id);
+			pstmt.setString(2, book.bookname);
+			pstmt.setString(3, book.author);
+			pstmt.setFloat(4, book.price);
 			pstmt.executeUpdate();
 			DBConnection.closeConnection(dbConn, pstmt);
+			return true;
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			System.out.println("添加成功!");
+			return false;
 		} 
 	}
 	
-	public void delete(String id){
+	public boolean delete(Book book){
 		try {
 			Connection dbConn = DBConnection.getConnection();
-			String sql = "delete BookList where id = ?";
+			String sql = "delete from BookList where id = ?";
 			PreparedStatement pstmt = dbConn.prepareStatement(sql);
-			pstmt.setString(1, id);
+			pstmt.setString(1, book.id);
 			pstmt.executeUpdate();
 			DBConnection.closeConnection(dbConn, pstmt);
+			return true;
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} finally{
-			System.out.println("删除成功!");
-		}
+			return false;
+		} 
 	}
 	
-	public void charge(String bookname,String author,Float price,String newId,String oldId){
+	public boolean charge(Book book,String oldId){
 		try {
 			Connection dbConn = DBConnection.getConnection();
 			String sql = "update BookList set bookname = ?, author = ?, price = ?, id = ? where id = ?";
 			PreparedStatement pstmt = dbConn.prepareStatement(sql);
-			pstmt.setString(1, bookname);
-			pstmt.setString(2, author);
-			pstmt.setFloat(3, price);
-			pstmt.setString(4, newId);
+			pstmt.setString(1, book.bookname);
+			pstmt.setString(2, book.author);
+			pstmt.setFloat(3, book.price);
+			pstmt.setString(4, book.id);
 			pstmt.setString(5, oldId);
 			pstmt.executeUpdate();
 			DBConnection.closeConnection(dbConn, pstmt);
+			return true;
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} finally{
-			System.out.println("修改成功！");
+			return false;
 		}
 	}
 	
-	public int search(String str){
-		int count = 0;
+	public BookList searchById(Book book){
+		BookList booklist = new BookList();
 		try {
 			Connection dbConn = DBConnection.getConnection();
-			String sql = "select * from BookList where id = ? or bookname = ? or author = ?";
+			String sql = "select * from BookList where id regexp ?";
 			PreparedStatement pstmt = dbConn.prepareStatement(sql);
-			pstmt.setString(1, str);
-			pstmt.setString(2, str);
-			pstmt.setString(3, str);
+			pstmt.setString(1, book.id);
 			ResultSet rs = pstmt.executeQuery();
 			while(rs.next()){
-				System.out.println("编号" + rs.getString("id") + "，书名为" + rs.getString("bookname") + ",作者为" + rs.getString("author") + ",单价为:" + rs.getFloat("price"));
-				count++;
+				Book abook = new Book(rs.getString("id"),rs.getString("bookname"),rs.getString("author"),rs.getFloat("price"));
+				booklist.add(abook);
 			}
-			if(count == 0)
-				System.out.println("没有这本书！");
 			DBConnection.closeConnection(dbConn, pstmt,rs);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		return count;
+		return booklist;
 	}
 	
-	public void search(float lowPrice){
+	public BookList searchByBookname(Book book){
+		BookList booklist = new BookList();
+		try {
+			Connection dbConn = DBConnection.getConnection();
+			String sql = "select * from BookList where bookname regexp ?";
+			PreparedStatement pstmt = dbConn.prepareStatement(sql);
+			pstmt.setString(1, book.bookname);
+			ResultSet rs = pstmt.executeQuery();
+			while(rs.next()){
+				Book abook = new Book(rs.getString("id"),rs.getString("bookname"),rs.getString("author"),rs.getFloat("price"));
+				booklist.add(abook);
+			}
+			DBConnection.closeConnection(dbConn, pstmt,rs);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return booklist;
+	}
+	
+	public BookList searchByAuthor(Book book){
+		BookList booklist = new BookList();
+		try {
+			Connection dbConn = DBConnection.getConnection();
+			String sql = "select * from BookList where author regexp ?";
+			PreparedStatement pstmt = dbConn.prepareStatement(sql);
+			pstmt.setString(1, book.author);
+			ResultSet rs = pstmt.executeQuery();
+			while(rs.next()){
+				Book abook = new Book(rs.getString("id"),rs.getString("bookname"),rs.getString("author"),rs.getFloat("price"));
+				booklist.add(abook);
+			}
+			DBConnection.closeConnection(dbConn, pstmt,rs);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return booklist;
+	}
+	
+	public BookList searchByPrice(Book book){
+		BookList booklist = new BookList();
 		try {
 			Connection dbConn = DBConnection.getConnection();
 			String sql = "select * from BookList where price = ? or price > ?";
 			PreparedStatement pstmt = dbConn.prepareStatement(sql);
-			pstmt.setFloat(1, lowPrice);
-			pstmt.setFloat(2, lowPrice);
+			pstmt.setFloat(1, book.price);
+			pstmt.setFloat(2, book.price);
 			ResultSet rs = pstmt.executeQuery();
-			System.out.println("所查图书有：");
-			int count = 0;
 			while(rs.next()){
-				System.out.println(rs.getString("bookname") + "，作者为：" + rs.getString("author") + "，单价为：" + rs.getFloat("price") +"，编号为：" + rs.getString("id"));
-				count++;
+				Book abook = new Book(rs.getString("id"),rs.getString("bookname"),rs.getString("author"),rs.getFloat("price"));
+				booklist.add(abook);
 			}
-			if(count == 0)
-				System.out.println("没有这本书！");
-			DBConnection.closeConnection(dbConn, pstmt,rs);
+			DBConnection.closeConnection(dbConn, pstmt, rs);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		return booklist;
 	}
 	
-	public void search(float lowPrice,float highPrice){
+	public BookList searchByPrice(Book lowBook,Book highBook){
+		BookList booklist = new BookList();
 		try {
 			Connection dbConn = DBConnection.getConnection();
 			String sql = "select * from BookList where price > ? and price < ?";
 			PreparedStatement pstmt = dbConn.prepareStatement(sql);
-			pstmt.setFloat(1, lowPrice);
-			pstmt.setFloat(2, highPrice);
+			pstmt.setFloat(1, lowBook.price);
+			pstmt.setFloat(2, highBook.price);
 			ResultSet rs = pstmt.executeQuery();
-			int count = 0;
 			while(rs.next()){
-				System.out.println(rs.getString("bookname") + "，作者为：" + rs.getString("author") + "，单价为：" + rs.getFloat("price") +"，编号为：" + rs.getInt("id"));
-				count++;
+				Book abook = new Book(rs.getString("id"),rs.getString("bookname"),rs.getString("author"),rs.getFloat("price"));
+				booklist.add(abook);
 			}
-			if(count == 0)
-				System.out.println("没有这本书！");
 			DBConnection.closeConnection(dbConn, pstmt,rs);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		return booklist;
 	}
 	
-	public void foreach(){
-		System.out.print("\n\n");
+	public BookList foreach(){
+		BookList booklist = new BookList();
 		String sql = "select * from BookList order by id";
 		try {
 			Connection dbConn = DBConnection.getConnection();
 			PreparedStatement pstmt = dbConn.prepareStatement(sql);
 			ResultSet rs = pstmt.executeQuery();
-			System.out.println("当前图书为：");
 			while(rs.next()){
-				System.out.println("编号" + rs.getString("id") + "，书名为" + rs.getString("bookname") + ",作者为" + rs.getString("author") + ",单价为:" + rs.getFloat("price"));
+				Book book = new Book(rs.getString("id"),rs.getString("bookname"),rs.getString("author"),rs.getFloat("price"));
+				booklist.add(book);
 			}
 			DBConnection.closeConnection(dbConn, pstmt,rs);
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		System.out.print("\n\n");
-	}
-	
-	public int bookCount(){
-		String sql = "select * from BookList order by id";
-		int count = 0;
-		try {
-			Connection dbConn = DBConnection.getConnection();
-			PreparedStatement pstmt = dbConn.prepareStatement(sql);
-			ResultSet rs = pstmt.executeQuery();
-			while(rs.next()){
-				count++;
-			}
-			DBConnection.closeConnection(dbConn, pstmt,rs);
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return count;
+		return booklist;
 	}
 }
 

@@ -7,10 +7,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class DBConnection {
-	static final String driverName="com.microsoft.sqlserver.jdbc.SQLServerDriver";
-	static final String dbURL="jdbc:sqlserver://localhost:1433;DatabaseName=Book";
-	static final String userName="sa";
-	static final String userPwd="jiang1689";
+	static final String driverName="com.mysql.jdbc.Driver";
+	static final String dbURL="jdbc:mysql://localhost:3306/Book";
+	static final String userName="root";
+	static final String userPwd="1689";
 	
 	static{
 		try {

@@ -1,6 +1,8 @@
 package GUI;
 import java.util.Scanner;
 
+import MODEL.Book;
+import MODEL.BookList;
 import OPERATION.Operation;
 
 public class MainClass {
@@ -11,7 +13,7 @@ public class MainClass {
 	}
 	
 	MainClass(){
-		new Operation().foreach();
+		foreach();
 		String choose = "0";
 		while(!choose.equals("6")){
 			System.out.println("欢迎来到图书管理系统！");
@@ -25,7 +27,7 @@ public class MainClass {
 			case "2":delete();break;
 			case "3":charge();break;
 			case "4":search();break;
-			case "5":new Operation().foreach();break;
+			case "5":foreach();break;
 			case "6":break;
 			default:System.out.println("请输入正确序号！！");break;
 			}
@@ -38,12 +40,13 @@ public class MainClass {
 		System.out.println("\n\n**********增加界面**********");
 		String id = null;
 		int temp = 0;
+		Operation op = new Operation();
 		do{
 			System.out.println("请输入要添加图书的编号：");
 			id = in.nextLine();
-			if((temp = new Operation().search(id)) == 0)
+			if(op.searchById(new Book(id,null,null,0)).size() != 0)
 				System.out.println("该书籍已存在，请重新输入！");
-		}while(temp == 0);
+		}while(temp != 0);
 		System.out.println("请输入要添加图书的书名：");
 		String bookname = in.nextLine();
 		System.out.println("请输入要添加图书的作者：");
@@ -51,30 +54,41 @@ public class MainClass {
 		System.out.println("请输入要添加图书的单价：");
 		float price = in.nextFloat();
 		in.nextLine();
-		new Operation().add(id, bookname, author, price);
+		Book book = new Book(id,bookname,author,price);
+		if(op.add(book))
+			System.out.println("添加成功！");
+		else
+			System.out.println("添加失败。。");
 		System.out.println("\n\n");
 	}
 	
 	public void delete(){
-		if(new Operation().bookCount() <= 0)
+		Operation op = new Operation();
+		if(op.foreach().size() <= 0)
 			System.out.println("图书已为0本，无法删除！");
 		else{
 			System.out.println("\n\n**********删除界面**********");
 			System.out.println("请输入所改图书序号：");
 			String id = in.nextLine();
-			if(new Operation().search(id) == 0)
+			if(op.searchById(new Book(id,null,null,0)).size() == 0)
 				System.out.println("数据库中没有该书籍！");
-			else
-				new Operation().delete(id);
+			else{
+				Book book = new Book(id,null,null,0);
+				if(op.delete(book))
+					System.out.println("删除成功！");
+				else
+					System.out.println("删除失败。。");
+			}
 			System.out.println("\n\n");
 		}
 	}
 	
 	public void charge(){
+		Operation op = new Operation();
 		System.out.println("\n\n**********修改界面**********");
 		System.out.println("请输入改之前图书编号：");
 		String oldId = in.nextLine();
-		if(new Operation().search(oldId) == 0)
+		if(op.searchById(new Book(oldId,null,null,0)).size() == 0)
 			System.out.println("数据库中没有该书籍！");
 		else{
 			System.out.println("请输入改之后图书编号：");
@@ -86,7 +100,11 @@ public class MainClass {
 			System.out.println("请输入所改图书单价:");
 			float price = in.nextFloat();
 			in.nextLine();
-			new Operation().charge(bookname, author, price, newId, oldId);
+			Book book = new Book(newId,bookname,author,price);
+			if(op.charge(book, oldId))
+				System.out.println("修改成功！");
+			else
+				System.out.println("修改失败。。");
 		}
 		System.out.println("\n\n");
 	}
@@ -100,19 +118,44 @@ public class MainClass {
 		case "1":{
 			System.out.println("请输入所查图书序号：");
 			String id = in.nextLine();
-			new Operation().search(id);
+			Book book = new Book(id,null,null,0);
+			BookList booklist = new Operation().searchById(book);
+			int count = booklist.size();
+			if(count == 0)
+				System.out.println("没有这本书。。");
+			else
+				for(int i = 0; i<booklist.size(); i++){
+					System.out.println("编号" + booklist.get(i).id + "，书名为《" + booklist.get(i).bookname + "》，作者为" + booklist.get(i).author + "，单价为：" + booklist.get(i).price);
+				}
 		}break;
 		case "2":{
-			System.out.println("请输入所查图书名称：");
+			System.out.println("请输入所查图书书名：");
 			String bookname = in.nextLine();
-			new Operation().search(bookname);
+			Book book = new Book(null,bookname,null,0);
+			BookList booklist = new Operation().searchByBookname(book);
+			int count = booklist.size();
+			if(count == 0)
+				System.out.println("没有这本书。。");
+			else
+				for(int i = 0; i<booklist.size(); i++){
+					System.out.println("编号" + booklist.get(i).id + "，书名为《" + booklist.get(i).bookname + "》，作者为" + booklist.get(i).author + "，单价为：" + booklist.get(i).price);
+				}
 		}break;
 		case "3":{
-			System.out.println("请输入所查图书作者：");
+			System.out.println("请输入所查图书作者名：");
 			String author = in.nextLine();
-			new Operation().search(author);
+			Book book = new Book(null,null,author,0);
+			BookList booklist = new Operation().searchByAuthor(book);
+			int count = booklist.size();
+			if(count == 0)
+				System.out.println("没有这本书。。");
+			else
+				for(int i = 0; i<booklist.size(); i++){
+					System.out.println("编号" + booklist.get(i).id + "，书名为《" + booklist.get(i).bookname + "》，作者为" + booklist.get(i).author + "，单价为：" + booklist.get(i).price);
+				}
 		}break;
 		case "4":{
+			Operation op = new Operation();
 			float lowPrice = 0;
 			do{
 				System.out.println("请输入所查图书最低价：");
@@ -121,10 +164,20 @@ public class MainClass {
 				if(lowPrice<0)
 					System.out.println("请输入正确价格！");
 			}while(lowPrice < 0);
+			Book lowBook = new Book(null,null,null,lowPrice);
 			System.out.println("是否限制图书最高价？y or n");
 			String choose2 = in.nextLine();
-			if(choose2.equals("n"))
-				new Operation().search(lowPrice);
+			if(choose2.equals("n")){
+				BookList booklist = op.searchByPrice(lowBook);
+				int count = booklist.size();
+				if(count == 0)
+					System.out.println("查无此书。。");
+				else
+					for(int i = 0; i<booklist.size(); i++){
+						System.out.println("编号" + booklist.get(i).id + "，书名为《" + booklist.get(i).bookname + "》，作者为" + booklist.get(i).author + "，单价为：" + booklist.get(i).price);
+					}
+			}
+				
 			else if(choose2.equals("y")){
 				float highPrice = 0;
 				do{
@@ -134,11 +187,46 @@ public class MainClass {
 					if(highPrice <lowPrice)
 						System.out.println("所输最高价低于所输最低价，请重新输入！");
 				}while(highPrice <lowPrice);
-				new Operation().search(lowPrice, highPrice);
+				Book highBook = new Book(null,null,null,highPrice);
+				BookList booklist = op.searchByPrice(lowBook, highBook);
+				int count = booklist.size();
+				if(count == 0)
+					System.out.println("查无此书。。");
+				else
+					for(int i = 0; i<booklist.size(); i++){
+						System.out.println("编号" + booklist.get(i).id + "，书名为《" + booklist.get(i).bookname + "》，作者为" + booklist.get(i).author + "，单价为：" + booklist.get(i).price);
+					}
 			}
 		}break;
 		default:System.out.println("请输入正确序号！！");break;
 		}
 		System.out.print("\n\n");
 	}
+	
+	public void foreach(){
+		System.out.println("\n\n");
+		System.out.println("当前图书为：");
+		BookList booklist = new Operation().foreach();
+		int count = booklist.size();
+		if(count == 0)
+			System.out.println("数据库中没有存入任何书籍！");
+		else
+			for(int i = 0; i<booklist.size(); i++){
+				System.out.println("编号" + booklist.get(i).id + "，书名为《" + booklist.get(i).bookname + "》，作者为：" + booklist.get(i).author + "，单价为：" + booklist.get(i).price);
+			}
+		System.out.println("\n\n");
+	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+

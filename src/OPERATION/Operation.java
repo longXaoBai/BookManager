@@ -70,7 +70,7 @@ public class Operation {
 		BookList booklist = new BookList();
 		try {
 			Connection dbConn = DBConnection.getConnection();
-			String sql = "select * from BookList where id regexp ?";
+			String sql = "select * from BookList where id = ?";
 			PreparedStatement pstmt = dbConn.prepareStatement(sql);
 			pstmt.setString(1, book.id);
 			ResultSet rs = pstmt.executeQuery();
@@ -90,7 +90,7 @@ public class Operation {
 		BookList booklist = new BookList();
 		try {
 			Connection dbConn = DBConnection.getConnection();
-			String sql = "select * from BookList where bookname regexp ?";
+			String sql = "select * from BookList where bookname = ?";
 			PreparedStatement pstmt = dbConn.prepareStatement(sql);
 			pstmt.setString(1, book.bookname);
 			ResultSet rs = pstmt.executeQuery();
@@ -110,7 +110,7 @@ public class Operation {
 		BookList booklist = new BookList();
 		try {
 			Connection dbConn = DBConnection.getConnection();
-			String sql = "select * from BookList where author regexp ?";
+			String sql = "select * from BookList where author = ?";
 			PreparedStatement pstmt = dbConn.prepareStatement(sql);
 			pstmt.setString(1, book.author);
 			ResultSet rs = pstmt.executeQuery();
